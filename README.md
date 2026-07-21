@@ -61,10 +61,10 @@ Replace the database placeholder in the local untracked `backend/.env`. Run comm
 
 ```powershell
 & ".venv\Scripts\python.exe" -m alembic upgrade head
-& ".venv\Scripts\python.exe" -m uvicorn app.main:app --reload
+& ".venv\Scripts\python.exe" -m uvicorn app.main:app --reload --no-access-log
 ```
 
-The API documentation is at `http://127.0.0.1:8000/docs`. `GET /health` reports process liveness. `GET /ready` verifies PostgreSQL and returns `503` with sanitized detail when it is unavailable.
+The API documentation is at `http://127.0.0.1:8000/docs`. `GET /health` reports process liveness. `GET /ready` verifies PostgreSQL and returns `503` with sanitized detail when it is unavailable. The application emits one JSON `request_completed` event per request; Uvicorn's duplicate plain-text access log is disabled by the startup command.
 
 Quality checks from `backend/`:
 
