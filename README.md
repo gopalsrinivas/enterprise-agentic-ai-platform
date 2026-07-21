@@ -2,7 +2,7 @@
 
 A production-oriented reference platform for secure enterprise knowledge retrieval and approval-gated workflows. It combines a FastAPI API, PostgreSQL/pgvector, LangGraph specialist agents, an extensible LLM gateway, MCP-compatible tools, and a Next.js interface.
 
-> Status: Phase 3 core schema, authentication, and RBAC are implemented for review. Document processing and all AI/workflow capabilities remain planned for later phases.
+> Status: Phase 4 secure document ingestion and authorized pgvector retrieval are implemented for review. LLM answer generation and agent/workflow capabilities remain planned for later phases.
 
 ## Intended capabilities
 
@@ -78,7 +78,7 @@ The bootstrap is idempotent, never embeds or prints credentials, and never repla
 administrator's password. Access JWTs are short-lived; opaque refresh tokens are stored only as
 keyed hashes and rotate on every refresh. Reuse revokes the entire token family.
 
-The API documentation is at `http://127.0.0.1:8000/docs`. `GET /health` reports process liveness. `GET /ready` verifies PostgreSQL and returns `503` with sanitized detail when it is unavailable. Phase 3 exposes only the approved `/api/v1/auth/*`, `/api/v1/users*`, and `/api/v1/roles` identity endpoints. The application emits one JSON `request_completed` event per request; Uvicorn's duplicate plain-text access log is disabled by the startup command.
+The API documentation is at `http://127.0.0.1:8000/docs`. `GET /health` reports process liveness. `GET /ready` verifies PostgreSQL and returns `503` with sanitized detail when it is unavailable. Phase 4 adds authenticated `/api/v1/documents*` ingestion/lifecycle endpoints and `/api/v1/search`, which returns authorized citation candidates without generating an LLM answer. The application emits one JSON `request_completed` event per request; Uvicorn's duplicate plain-text access log is disabled by the startup command.
 
 Quality checks from `backend/`:
 

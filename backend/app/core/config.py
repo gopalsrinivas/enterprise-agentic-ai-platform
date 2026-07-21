@@ -36,6 +36,16 @@ class Settings(BaseSettings):
     access_token_ttl_minutes: int = Field(default=15, ge=1, le=60)
     refresh_token_ttl_days: int = Field(default=7, ge=1, le=30)
     registration_enabled: bool = False
+    document_storage_path: str = ".data/documents"
+    document_max_bytes: int = Field(default=10_000_000, ge=1, le=100_000_000)
+    document_max_pages: int = Field(default=500, ge=1, le=5000)
+    document_max_extracted_chars: int = Field(default=2_000_000, ge=1)
+    document_chunk_chars: int = Field(default=1200, ge=100, le=10000)
+    document_chunk_overlap_chars: int = Field(default=200, ge=0, le=2000)
+    embedding_provider: Literal["fake", "openai"] = "fake"
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimensions: Literal[1536] = 1536
+    openai_api_key: SecretStr | None = Field(default=None, repr=False)
 
     @model_validator(mode="after")
     def validate_security_configuration(self) -> "Settings":
@@ -47,6 +57,10 @@ class Settings(BaseSettings):
             raise ValueError("JWT_SECRET must be configured in production")
         if self.app_env == "production" and self.registration_enabled:
             raise ValueError("Registration cannot be enabled in production")
+        if self.document_chunk_overlap_chars >= self.document_chunk_chars:
+            raise ValueError("DOCUMENT_CHUNK_OVERLAP_CHARS must be smaller than chunk size")
+        if self.embedding_provider == "openai" and self.openai_api_key is None:
+            raise ValueError("OPENAI_API_KEY is required for the OpenAI embedding provider")
         return self
 
     @property

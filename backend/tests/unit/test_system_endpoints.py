@@ -64,7 +64,7 @@ def test_invalid_request_id_is_replaced(client: TestClient) -> None:
     assert generated != "not-a-uuid"
 
 
-def test_openapi_exposes_only_approved_phase_two_and_three_operations(client: TestClient) -> None:
+def test_openapi_exposes_only_approved_through_phase_four_operations(client: TestClient) -> None:
     document = client.get("/openapi.json").json()
 
     assert document["info"]["title"] == "Enterprise Agentic AI Platform API"
@@ -80,4 +80,9 @@ def test_openapi_exposes_only_approved_phase_two_and_three_operations(client: Te
         "/api/v1/users/{user_id}",
         "/api/v1/roles",
         "/api/v1/users/{user_id}/roles",
+        "/api/v1/documents",
+        "/api/v1/documents/{document_id}",
+        "/api/v1/documents/{document_id}/reprocess",
+        "/api/v1/documents/{document_id}/chunks",
+        "/api/v1/search",
     }

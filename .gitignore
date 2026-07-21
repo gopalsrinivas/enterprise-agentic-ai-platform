@@ -42,6 +42,7 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Generated runtime data
+.data/
 uploads/
 artifacts/
 generated/

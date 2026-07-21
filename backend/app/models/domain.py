@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
+from pgvector.sqlalchemy import VECTOR
 from sqlalchemy import (
     JSON,
     BigInteger,
@@ -65,7 +66,7 @@ class DocumentChunk(MutableAuditMixin, Base):
     page_number: Mapped[int | None] = mapped_column(Integer)
     section: Mapped[str | None] = mapped_column(String(255))
     token_count: Mapped[int | None] = mapped_column(Integer)
-    embedding: Mapped[list[float] | None] = mapped_column(JSON)
+    embedding: Mapped[list[float] | None] = mapped_column(VECTOR(1536))
     embedding_model: Mapped[str | None] = mapped_column(String(255))
     metadata_: Mapped[dict[str, Any]] = mapped_column("metadata", JSON, default=dict)
 
