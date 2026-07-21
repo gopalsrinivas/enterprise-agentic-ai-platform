@@ -2,7 +2,7 @@
 
 A production-oriented reference platform for secure enterprise knowledge retrieval and approval-gated workflows. It combines a FastAPI API, PostgreSQL/pgvector, LangGraph specialist agents, an extensible LLM gateway, MCP-compatible tools, and a Next.js interface.
 
-> Status: Phase 1 architecture and planning only. No application business logic has been implemented.
+> Status: Phase 2 backend foundation. Operational endpoints and infrastructure are implemented; authentication and all AI/business capabilities remain planned for later phases.
 
 ## Intended capabilities
 
@@ -45,9 +45,38 @@ infra/            Docker, Kubernetes, Terraform, and observability config
 
 Development is intentionally split into the phase specifications under `docs/`: backend foundation; identity and schema; document ingestion/RAG; LLM gateway; LangGraph agents; MCP and approvals; safety; evaluation and observability; frontend; containers; deployment; and final audit.
 
-## Local development
+## Backend development
 
-Phase 1 has no runtime dependencies or startup command. Phase 2 will introduce the backend environment, `.env.example`, migrations, linting, typing, and tests. Phase 10 adds the frontend, and Phase 11 provides the documented one-command local environment.
+Prerequisites are Python 3.12 and, for live readiness/migrations, PostgreSQL 16+. The unit suite does not require PostgreSQL.
+
+```powershell
+$python312 = "<path-to-python-3.12-executable>"
+& $python312 -m venv "backend\.venv"
+& "backend\.venv\Scripts\python.exe" -m pip install --upgrade pip
+& "backend\.venv\Scripts\python.exe" -m pip install -e "backend[dev]"
+Copy-Item "backend\.env.example" "backend\.env"
+```
+
+Replace the database placeholder in the local untracked `backend/.env`. Run commands from `backend/` so settings load that file:
+
+```powershell
+& ".venv\Scripts\python.exe" -m alembic upgrade head
+& ".venv\Scripts\python.exe" -m uvicorn app.main:app --reload
+```
+
+The API documentation is at `http://127.0.0.1:8000/docs`. `GET /health` reports process liveness. `GET /ready` verifies PostgreSQL and returns `503` with sanitized detail when it is unavailable.
+
+Quality checks from `backend/`:
+
+```powershell
+& ".venv\Scripts\python.exe" -m ruff format --check .
+& ".venv\Scripts\python.exe" -m ruff check .
+& ".venv\Scripts\python.exe" -m mypy app tests
+& ".venv\Scripts\python.exe" -m pytest
+& ".venv\Scripts\python.exe" -m alembic check
+```
+
+Phase 10 adds the frontend, and Phase 11 provides the complete containerized local environment.
 
 Never commit `.env` files, credentials, private keys, generated uploads, or production data. The root `.gitignore` provides baseline protection, but secrets must also be managed using local environment variables and a cloud secret manager.
 
