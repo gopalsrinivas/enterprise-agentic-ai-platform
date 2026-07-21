@@ -37,9 +37,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(
         title="Enterprise Agentic AI Platform API",
         summary="Secure enterprise knowledge and workflow assistant API",
-        description=(
-            "Phase 2 backend foundation. Business capabilities are introduced in later phases."
-        ),
+        description=("Phase 3 core schema, authentication, and role-based access control."),
         version="0.1.0",
         docs_url="/docs",
         redoc_url="/redoc",

@@ -9,8 +9,11 @@ description = "FastAPI foundation for the Enterprise Agentic AI Platform"
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "alembic>=1.14,<1.15",
+  "argon2-cffi>=23.1,<24",
   "asyncpg>=0.30,<0.31",
+  "email-validator>=2.2,<3",
   "fastapi>=0.115,<0.116",
+  "PyJWT>=2.10,<3",
   "pydantic-settings>=2.7,<2.8",
   "sqlalchemy[asyncio]>=2.0.36,<2.1",
   "uvicorn[standard]>=0.34,<0.35",
@@ -39,7 +42,7 @@ select = ["E", "F", "I", "B", "UP", "ASYNC", "S", "RUF"]
 ignore = ["S101"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]
+"tests/**/*.py" = ["S101", "S105", "S106"]
 
 [tool.mypy]
 python_version = "3.12"

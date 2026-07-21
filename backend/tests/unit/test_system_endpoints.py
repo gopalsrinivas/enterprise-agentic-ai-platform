@@ -64,8 +64,20 @@ def test_invalid_request_id_is_replaced(client: TestClient) -> None:
     assert generated != "not-a-uuid"
 
 
-def test_openapi_exposes_only_phase_two_operations(client: TestClient) -> None:
+def test_openapi_exposes_only_approved_phase_two_and_three_operations(client: TestClient) -> None:
     document = client.get("/openapi.json").json()
 
     assert document["info"]["title"] == "Enterprise Agentic AI Platform API"
-    assert set(document["paths"]) == {"/health", "/ready"}
+    assert set(document["paths"]) == {
+        "/health",
+        "/ready",
+        "/api/v1/auth/register",
+        "/api/v1/auth/login",
+        "/api/v1/auth/refresh",
+        "/api/v1/auth/logout",
+        "/api/v1/users/me",
+        "/api/v1/users",
+        "/api/v1/users/{user_id}",
+        "/api/v1/roles",
+        "/api/v1/users/{user_id}/roles",
+    }

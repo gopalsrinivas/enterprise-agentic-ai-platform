@@ -2,7 +2,7 @@
 
 A production-oriented reference platform for secure enterprise knowledge retrieval and approval-gated workflows. It combines a FastAPI API, PostgreSQL/pgvector, LangGraph specialist agents, an extensible LLM gateway, MCP-compatible tools, and a Next.js interface.
 
-> Status: Phase 2 backend foundation. Operational endpoints and infrastructure are implemented; authentication and all AI/business capabilities remain planned for later phases.
+> Status: Phase 3 core schema, authentication, and RBAC are implemented for review. Document processing and all AI/workflow capabilities remain planned for later phases.
 
 ## Intended capabilities
 
@@ -61,10 +61,24 @@ Replace the database placeholder in the local untracked `backend/.env`. Run comm
 
 ```powershell
 & ".venv\Scripts\python.exe" -m alembic upgrade head
+& ".venv\Scripts\python.exe" -m app.cli seed-rbac
 & ".venv\Scripts\python.exe" -m uvicorn app.main:app --reload --no-access-log
 ```
 
-The API documentation is at `http://127.0.0.1:8000/docs`. `GET /health` reports process liveness. `GET /ready` verifies PostgreSQL and returns `503` with sanitized detail when it is unavailable. The application emits one JSON `request_completed` event per request; Uvicorn's duplicate plain-text access log is disabled by the startup command.
+Development registration is disabled by default and can be enabled only with
+`REGISTRATION_ENABLED=true` outside production. Create the first administrator explicitly after
+the migration and RBAC seed by supplying `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and optionally
+`ADMIN_DISPLAY_NAME` through the local process environment, then run:
+
+```powershell
+& ".venv\Scripts\python.exe" -m app.cli bootstrap-admin
+```
+
+The bootstrap is idempotent, never embeds or prints credentials, and never replaces an existing
+administrator's password. Access JWTs are short-lived; opaque refresh tokens are stored only as
+keyed hashes and rotate on every refresh. Reuse revokes the entire token family.
+
+The API documentation is at `http://127.0.0.1:8000/docs`. `GET /health` reports process liveness. `GET /ready` verifies PostgreSQL and returns `503` with sanitized detail when it is unavailable. Phase 3 exposes only the approved `/api/v1/auth/*`, `/api/v1/users*`, and `/api/v1/roles` identity endpoints. The application emits one JSON `request_completed` event per request; Uvicorn's duplicate plain-text access log is disabled by the startup command.
 
 Quality checks from `backend/`:
 
