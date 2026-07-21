@@ -1,0 +1,73 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.Python
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+dist/
+build/
+*.egg-info/
+
+# JavaScript / Next.js
+node_modules/
+.next/
+out/
+.turbo/
+coverage/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Generated runtime data
+uploads/
+artifacts/
+generated/
+tmp/
+temp/
+*.log
+logs/
+*.pid
+
+# Infrastructure and tooling
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+.terraformrc
+terraform.rc
+*.tfvars
+!*.tfvars.example
+.docker/
+
+# IDE and operating system
+.idea/
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
