@@ -24,7 +24,11 @@ SUPPORTED = {
 
 
 class DocumentError(ValueError):
-    pass
+    """A safe validation/parser error suitable for an API response."""
+
+    def __init__(self, message: str, status_code: int = 400) -> None:
+        super().__init__(message)
+        self.status_code = status_code
 
 
 @dataclass(frozen=True)
@@ -59,17 +63,29 @@ def validate_upload(filename: str, media_type: str, content: bytes, settings: Se
         raise DocumentError("Invalid filename")
     suffix = Path(clean).suffix.casefold()
     if suffix not in SUPPORTED:
-        raise DocumentError("Unsupported file extension")
+        raise DocumentError("Unsupported file extension", 415)
     allowed = {SUPPORTED[suffix]}
     if suffix == ".md":
         allowed.add("text/plain")
     if media_type.casefold().split(";", 1)[0] not in allowed:
-        raise DocumentError("File type does not match extension")
-    if not content or len(content) > settings.document_max_bytes:
-        raise DocumentError("File is empty or exceeds the configured size limit")
+        raise DocumentError("File type does not match extension", 415)
+    if not content:
+        raise DocumentError("File is empty")
+    if len(content) > settings.document_max_bytes:
+        raise DocumentError("File exceeds the configured size limit", 413)
     signatures = {".pdf": b"%PDF-", ".docx": b"PK\x03\x04"}
     if suffix in signatures and not content.startswith(signatures[suffix]):
-        raise DocumentError("Detected file content does not match extension")
+        raise DocumentError("Detected file content does not match extension", 415)
+    if suffix == ".docx":
+        try:
+            with zipfile.ZipFile(io.BytesIO(content)) as archive:
+                names = set(archive.namelist())
+                if "[Content_Types].xml" not in names or "word/document.xml" not in names:
+                    raise DocumentError("Detected file content does not match extension", 415)
+        except DocumentError:
+            raise
+        except (OSError, zipfile.BadZipFile) as exc:
+            raise DocumentError("Detected file content does not match extension", 415) from exc
     if suffix in {".txt", ".md"} and b"\x00" in content:
         raise DocumentError("Detected binary content in text document")
     return clean
@@ -144,11 +160,19 @@ def chunk_parts(parts: list[ExtractedPart], size: int, overlap: int) -> list[Ext
 
 
 def store(content: bytes, root: str) -> tuple[str, str]:
-    key = f"{uuid4().hex[:2]}/{uuid4().hex}"
-    target = Path(root).resolve() / key
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_bytes(content)
-    return key, hashlib.sha256(content).hexdigest()
+    root_path = Path(root).resolve()
+    for _ in range(10):
+        identifier = uuid4().hex
+        key = f"{identifier[:2]}/{identifier}"
+        target = root_path / key
+        target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            with target.open("xb") as stream:
+                stream.write(content)
+            return key, hashlib.sha256(content).hexdigest()
+        except FileExistsError:
+            continue
+    raise DocumentError("Document storage is unavailable")
 
 
 def load(root: str, key: str) -> bytes:

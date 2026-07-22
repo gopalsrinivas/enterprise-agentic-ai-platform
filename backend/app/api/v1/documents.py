@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.dependencies import get_app_settings, get_session
 from app.api.v1.dependencies import current_user, require_permission
 from app.core.config import Settings
+from app.core.logging import get_logger
 from app.models.domain import Document, DocumentChunk
 from app.models.identity import User
 from app.schemas.documents import (
@@ -35,6 +36,7 @@ from app.services.embeddings import FakeEmbeddingProvider, OpenAIEmbeddingProvid
 from app.services.identity import audit, effective_permissions
 
 router = APIRouter(tags=["documents"])
+logger = get_logger(__name__)
 
 
 def response(document: Document) -> DocumentResponse:
@@ -150,11 +152,12 @@ async def upload_document(
         await session.refresh(document)
         return response(document)
     except DocumentError as exc:
-        raise HTTPException(400, str(exc)) from exc
+        raise HTTPException(exc.status_code, str(exc)) from exc
     except Exception as exc:
         await session.rollback()
         if "key" in locals():
             remove(settings.document_storage_path, key)
+        logger.error("document_upload_failed", extra={"exception_type": type(exc).__name__})
         raise HTTPException(422, "Document processing failed") from exc
 
 
@@ -221,6 +224,10 @@ async def reprocess_document(
     settings: Annotated[Settings, Depends(get_app_settings)],
 ) -> DocumentResponse:
     document = await owned(session, user, document_id)
+    if document.status == "ready":
+        return response(document)
+    if document.status in {"uploaded", "processing"}:
+        raise HTTPException(409, "Document is already being processed")
     try:
         await process(
             document, load(settings.document_storage_path, document.storage_key), settings, session
